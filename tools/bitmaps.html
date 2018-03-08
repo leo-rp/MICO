@@ -1,138 +1,182 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<title>
-		
-	</title>
-</head>
-<style type="text/css">
-	textarea{
-		width: 1000px;
-		height: 150px;
-	}
+<html lang="es">
+  <head>
+    <title>Bitmaps Tool</title>
+    <style type="text/css">
+      .table {
+        display: table;
+        border: 1px solid black;
+      }
+      
+      .table > .tr {
+        display: table-row;
+      }
+      
+      .table > .tr > .td {
+        display: table-cell;
+        width: 10px;
+        height: 10px;
+        background: white;
+        border: 1px solid black;
+      }
+      
+      .table > .tr > .td:hover {
+        border: 1px solid red;
+      }
+      
+      input {
+        width: 50px;
+      }
+      
+      textarea {
+        width: 1000px;
+        height: 150px;
+      }
 
-	p{
-		overflow: scroll;
-	}
-</style>
-<body>
-
-
-
-<table>
-	<tr>
-		<td>	
-			<table>
-				<tr>
-					<td>
-						<input id="name" type="text" value="bitmap" >
-						<input id="cols" type="number" value="8" step="8" min="8" >
-						<input id="rows" type="number" value="8">
-						<button id="drawButton" onclick="newTable()">New</button>
-					</td>					
-				</tr>
-				<tr>
-					<td>
-						<input id="currentTable" type="number" value="0" step="1" min="1" >
-						<button id="drawButton" onclick="cloneTable()">Clone</button>						
-					</td>
-				</tr>
-				<tr>
-					<td>
-						
-					</td>
-				</tr>
-			</table>
-		</td>		
-	</tr>
-	
-	<tr>
-		<td>
-			<div id="canvas" style="max-height: 800px; min-width: 800px; overflow: auto;">
-				
-			</div>
-
-		</td>
-		<td>
-			<div id="preview"></div>
-			<input id="speed" type="number" value="1000" step="100" min="10" onchange="previewAnimation()" >
-		</td>
-		
-	</tr>
-	
-	
-
-
-</table>		
-
-
-
-
-
-
-
-	
-
-
-
+      p {
+        overflow: scroll;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td>
+          <div>
+            <input id="name" type="text" value="bitmap" style="width:150px;" />
+            <input id="cols" type="number" value="8" step="8" min="8" />
+            <input id="rows" type="number" value="8" step="8" min="8" />
+            <button id="drawButton" onmousedown="newTable();">New</button>
+          </div>
+          <div>
+            <button onmousedown="exportBitmaps();">Export</button>
+            <button onmousedown="importBitmaps();">Import</button>
+            <div id="bitmaps"></div>
+          </div>
+          <br />
+          <div id="canvas" style="max-height: 800px; min-width: 800px; overflow: auto;"></div>
+        </td>
+        <td>
+          <label>Velocidad de la Animación:</label> <input id="speed" type="number" value="1000" step="100" min="10" onchange="previewAnimation();" />
+          <div id="preview"></div>
+        </td>
+      </tr>
+    </table>
 
 <script type="text/javascript">
-	let theAnimation, tbls, currentTable = 0; // Powered by Glendel
-	var tables = [];	
-	let canvas = document.getElementById('canvas');	
-	
-
+  const canvas = document.getElementById( 'canvas' );
+  const animaBody = document.getElementById( 'preview' );
+  let theAnimation,
+      tbls,
+      currentTable = 0, // Powered by Glendel
+      tables = [],
+      bitmaps = [];
+  
 // Powered by Glendel
 function previewAnimation() {
   clearInterval( theAnimation );
-  speed = document.getElementById('speed').value;
+  const speed = document.getElementById( 'speed' ).value;
   theAnimation = setInterval( function() {
-  	const animaBody = document.getElementById( 'preview' );
     currentTable = ( currentTable >= ( tbls.length - 1 ) ) ? 0 : ( currentTable + 1 );
-
     //console.log( 'Hola ' + currentTable );
     animaBody.innerHTML = tbls[ currentTable ].outerHTML;
   }, speed );
 }
 
-
-
-function cloneTable(){
-	current = document.getElementById('current').value;
-
+function toggleColor( obj, tableId, currentPosX, currentPosY ) {
+  if ( obj.style.background == 'black' ) {
+    obj.style.background = 'white';
+    bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0;
+  } else {
+    obj.style.background = 'black';
+    bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 1;
+  }
 }
 
-function newTable(){	
-	rows = document.getElementById('rows').value;
-	cols = document.getElementById('cols').value;
-	name = document.getElementById('name').value;
- 	createTable2(rows, cols, name); 	
-    // Powered by Glendel
-    tbls = document.querySelectorAll( '.table' );
- 	if ( tbls.length > 1 ) { previewAnimation(); }
+function createTable2( name, rows, cols ) {
+  let tableId = ( ( tbls === undefined ) ? 0 : tbls.length );
+  let container = '<div id="table'+tableId+'">';
+  let currentPosX = 3;
+  let currentPosY = 0;
+  const isClonning = Array.isArray( name );
+  
+  if ( isClonning ) {
+    bitmaps[ tableId ] = name;
+    name = bitmaps[ tableId ][ 0 ];
+    rows = bitmaps[ tableId ][ 1 ];
+    cols = bitmaps[ tableId ][ 2 ];
+  } else {
+    bitmaps[ tableId ] = [ name, rows, cols, [] ];
+  }
+  
+  container += '<div class="table">';
+  
+  for( let i = 0; i < rows; i++ ) {
+    container += '<div class="tr">';
+    for( let j = 0; j < cols; j++ ) {
+      if ( !isClonning ) { bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0; }
+      let style = ( ( bitmaps[ tableId ][ currentPosX ][ currentPosY ] == 1 ) ? ' style="background:black;"' : '' );
+      container += '<div class="td" onmousedown="toggleColor(this,'+tableId+','+currentPosX+','+currentPosY+');"'+style+'></div>';
+      currentPosY += 1;
+      if ( currentPosY >= 8 ) {
+        currentPosX += 1;
+        currentPosY = 0;
+        if ( !isClonning ) { bitmaps[ tableId ][ currentPosX ] = []; }
+      }
+    }
+    container += '</div>';
+  }
+
+  container += '</div>';
+  container += '<div class="actions">';
+  container += '<button onmousedown="printBitmap('+tableId+');">Bitmap</button> <button onmousedown="printJSON('+tableId+');">JSON</button> <button onmousedown="cloneTable('+tableId+')">Clone</button> <button onmousedown="if(confirm(\'Esta seguro ?\')){deleteTable('+tableId+');}">Delete</button>';
+  container += '</div><div class="bitmap"></div>';
+  container += '<div class="json"></div>';
+  container += '</div>';
+  canvas.innerHTML += container;
+  return( tableId );
+}
+
+function newTable() {
+  const name = document.getElementById( 'name' ).value;
+  const rows = document.getElementById( 'rows' ).value;
+  const cols = document.getElementById( 'cols' ).value;
+  //createTable( rows, cols, name );
+  createTable2( name, rows, cols );
+  // Powered by Glendel
+  tbls = document.querySelectorAll( '#canvas .table' );
+  if ( tbls.length > 1 ) { previewAnimation(); }
+}
+
+function cloneTable( tableId ) {
+  createTable2( bitmaps[ tableId ] );
+  tbls = document.querySelectorAll( '#canvas .table' );
+  if ( tbls.length > 1 ) { previewAnimation(); }
 }
 
 function printBitmap( tableId ) {
-	let output = 'const uint8_t bitmap[] PROGMEM = { '+bitmaps[tableId][0]+','+bitmaps[tableId][1];
+	let output = 'const uint8_t '+bitmaps[tableId][0]+'[] PROGMEM = { '+bitmaps[tableId][1]+','+bitmaps[tableId][2];
 	let size = ( bitmaps[tableId].length - 2 );
-	for ( let i = 2; i <=size; i++ ) {
-      output += ',B'+bitmaps[tableId][i].join('');
+	for ( let i = 3; i <=size; i++ ) {
+    output += ',B'+bitmaps[tableId][i].join('');
 	}
 	output += ',};'
-	console.log(output);
+	canvas.querySelector( '#table'+tableId+' > .bitmap' ).innerHTML = output;
 }
 
-function toggleColor(obj, tableId, currentPosX, currentPosY){
-	if ( obj.style.background == 'black' ) {
-	  obj.style.background = 'white';
-	  bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0;
-	} else {
-	  obj.style.background = 'black';
-	  bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 1;
-	}
-	printBitmap( tableId );
+function printJSON( tableId ) {
+  canvas.querySelector( '#table'+tableId+' > .json' ).innerHTML = JSON.stringify( bitmaps[ tableId ] );
 }
 
+function deleteTable( tableId ) {
+  alert( 'Falta el Código para borrar la Tabla : ' + tableId );
+}
+
+function exportBitmaps() {
+  document.getElementById( 'bitmaps' ).innerHTML = JSON.stringify( bitmaps );
+}
+
+// Codigo Viejo
 function changeColor(obj, index){
 	var color = 'black';
 	if(obj.style.background == color){
@@ -142,8 +186,7 @@ function changeColor(obj, index){
 	exportBitmap(index);
 }
 
-
-
+// Codigo Viejo
 function exportBitmap(index){	
 	opts= tables[index];
 	rows = document.getElementById(opts.tableId).rows;	
@@ -167,40 +210,7 @@ function exportBitmap(index){
 	output.innerHTML = outputText;	
 }
 
-let bitmaps = [];
-
-function createTable2(rows, cols, name) {
-	let container = '<div>';
-	let tableId = ( tbls === undefined ) ? 0 : tbls.length;
-	let currentPosX = 2;
-	let currentPosY = 0;
-    bitmaps[ tableId ] = [rows, cols, []];
-    //bitmaps[tableId] = [rows, cols, [1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1],B01000000,B01000010,B01000000,B01000010,B01000000,B01000000];
-
-    container += '<p></p>';
-    container += '<table  class="table" style="border:1px solid black;">';
-
-    for( i = 0; i < rows; i++ ) {
-        container += '<tr>';
-        for( j = 0; j < cols; j++ ) {
-          bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0;
-          container += '<td style="background:white;border:1px solid black;width:10px;height:10px;" onmousedown="toggleColor(this, '+tableId+', '+currentPosX+', '+currentPosY+');" onmouseover="toggleCell(this,\'red\');"onmouseout="toggleCell(this,\'black\');"></td>';
-          currentPosY += 1;
-          if ( currentPosY >= 8 ) {
-          	currentPosX += 1;
-            currentPosY = 0;
-            bitmaps[ tableId ][ currentPosX ] = [];
-          }
-        }
-        container += '</tr>';
-    }
-
-    container += '</table>';
-	container += '</div>';
-	canvas.innerHTML += container;
-}
-
-
+// Codigo Viejo
 function createTable(rows, cols, name){
 	var container  = document.createElement('div');
 	var containerId = 'container_'+tables.length;
@@ -244,18 +254,12 @@ function createTable(rows, cols, name){
     return table; 
 }
 
-
-
+// Codigo Viejo
 function cellMouse(obj, color){
 	obj.style.border = '1px solid '+ color; 
 }
 
-function toggleCell(obj, color) { cellMouse(obj, color); }
-
-
 </script>
 
-</body>
-
-
+  </body>
 </html>
