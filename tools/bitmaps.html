@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+		
+	</title>
+</head>
+<style type="text/css">
+	textarea{
+		width: 1000px;
+		height: 150px;
+	}
+
+	p{
+		overflow: scroll;
+	}
+</style>
+<body>
+
+
+
+<table>
+	<tr>
+		<td>	
+			<table>
+				<tr>
+					<td>
+						<input id="name" type="text" value="bitmap" >
+						<input id="cols" type="number" value="8" step="8" min="8" >
+						<input id="rows" type="number" value="8">
+						<button id="drawButton" onclick="newTable()">New</button>
+					</td>					
+				</tr>
+				<tr>
+					<td>
+						<input id="currentTable" type="number" value="0" step="1" min="1" >
+						<button id="drawButton" onclick="cloneTable()">Clone</button>						
+					</td>
+				</tr>
+				<tr>
+					<td>
+						
+					</td>
+				</tr>
+			</table>
+		</td>		
+	</tr>
+	
+	<tr>
+		<td>
+			<div id="canvas" style="max-height: 800px; min-width: 800px; overflow: auto;">
+				
+			</div>
+
+		</td>
+		<td>
+			<div id="preview"></div>
+			<input id="speed" type="number" value="1000" step="100" min="10" onchange="previewAnimation()" >
+		</td>
+		
+	</tr>
+	
+	
+
+
+</table>		
+
+
+
+
+
+
+
+	
+
+
+
+
+<script type="text/javascript">
+	let theAnimation, tbls, currentTable = 0; // Powered by Glendel
+	var tables = [];	
+	let canvas = document.getElementById('canvas');	
+	
+
+// Powered by Glendel
+function previewAnimation() {
+  clearInterval( theAnimation );
+  speed = document.getElementById('speed').value;
+  theAnimation = setInterval( function() {
+  	const animaBody = document.getElementById( 'preview' );
+    currentTable = ( currentTable >= ( tbls.length - 1 ) ) ? 0 : ( currentTable + 1 );
+
+    //console.log( 'Hola ' + currentTable );
+    animaBody.innerHTML = tbls[ currentTable ].outerHTML;
+  }, speed );
+}
+
+
+
+function cloneTable(){
+	current = document.getElementById('current').value;
+
+}
+
+function newTable(){	
+	rows = document.getElementById('rows').value;
+	cols = document.getElementById('cols').value;
+	name = document.getElementById('name').value;
+ 	createTable2(rows, cols, name); 	
+    // Powered by Glendel
+    tbls = document.querySelectorAll( '.table' );
+ 	if ( tbls.length > 1 ) { previewAnimation(); }
+}
+
+function printBitmap( tableId ) {
+	let output = 'const uint8_t bitmap[] PROGMEM = { '+bitmaps[tableId][0]+','+bitmaps[tableId][1];
+	let size = ( bitmaps[tableId].length - 2 );
+	for ( let i = 2; i <=size; i++ ) {
+      output += ',B'+bitmaps[tableId][i].join('');
+	}
+	output += ',};'
+	console.log(output);
+}
+
+function toggleColor(obj, tableId, currentPosX, currentPosY){
+	if ( obj.style.background == 'black' ) {
+	  obj.style.background = 'white';
+	  bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0;
+	} else {
+	  obj.style.background = 'black';
+	  bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 1;
+	}
+	printBitmap( tableId );
+}
+
+function changeColor(obj, index){
+	var color = 'black';
+	if(obj.style.background == color){
+		 color = 'white';
+	}
+	obj.style.background = color;
+	exportBitmap(index);
+}
+
+
+
+function exportBitmap(index){	
+	opts= tables[index];
+	rows = document.getElementById(opts.tableId).rows;	
+	output = document.getElementById(opts.outputId);	
+	aux = 0;
+	o = '';
+	outputText = "const uint8_t "+opts.name+"[] PROGMEM = { "+opts.cols+","+ opts.rows+",";			
+	for (var i = 0; i < rows.length; i++) {
+		cells = rows[i].cells;
+		for (var j = 0; j < cells.length; j++){										
+				o += cells[j].style.background == 'black' ? '1' : '0';				
+				aux+=1; 				
+			if(aux == 8 ){			
+				aux = 0;
+				outputText += "B"+o+",";
+				o = '';
+			}		   
+		}
+	}
+	outputText += "};";
+	output.innerHTML = outputText;	
+}
+
+let bitmaps = [];
+
+function createTable2(rows, cols, name) {
+	let container = '<div>';
+	let tableId = ( tbls === undefined ) ? 0 : tbls.length;
+	let currentPosX = 2;
+	let currentPosY = 0;
+    bitmaps[ tableId ] = [rows, cols, []];
+    //bitmaps[tableId] = [rows, cols, [1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1],B01000000,B01000010,B01000000,B01000010,B01000000,B01000000];
+
+    container += '<p></p>';
+    container += '<table  class="table" style="border:1px solid black;">';
+
+    for( i = 0; i < rows; i++ ) {
+        container += '<tr>';
+        for( j = 0; j < cols; j++ ) {
+          bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0;
+          container += '<td style="background:white;border:1px solid black;width:10px;height:10px;" onmousedown="toggleColor(this, '+tableId+', '+currentPosX+', '+currentPosY+');" onmouseover="toggleCell(this,\'red\');"onmouseout="toggleCell(this,\'black\');"></td>';
+          currentPosY += 1;
+          if ( currentPosY >= 8 ) {
+          	currentPosX += 1;
+            currentPosY = 0;
+            bitmaps[ tableId ][ currentPosX ] = [];
+          }
+        }
+        container += '</tr>';
+    }
+
+    container += '</table>';
+	container += '</div>';
+	canvas.innerHTML += container;
+}
+
+
+function createTable(rows, cols, name){
+	var container  = document.createElement('div');
+	var containerId = 'container_'+tables.length;
+    container.setAttribute('id', containerId);
+
+    var table  = document.createElement('table');
+    var tableId = 'table_'+tables.length;
+    table.setAttribute('id', tableId);
+    table.setAttribute('class', 'table');
+    
+
+    var output  = document.createElement('p');
+    var outputId = 'output_'+tables.length;
+    output.setAttribute('id', outputId);
+
+    
+    var opts = {'tableId' : tableId, 'outputId': outputId,  'name': name, 'rows': rows, 'cols': cols };    
+   
+    var i = 0;
+    var j = 0;    
+    table.style.border = '1px solid black';
+    for( i = 0; i < rows; i++){
+        var tr = table.insertRow();
+        for(j = 0; j < cols; j++){
+                var td = tr.insertCell();
+                td.style.border = '1px solid black';
+                td.style.height = '10px';
+                td.style.width = '10px';
+                td.style.background = 'white';
+                td.setAttribute("onmousedown","changeColor(this,"+tables.length+")");
+                td.setAttribute("onmouseover","cellMouse(this, 'red')");
+                td.setAttribute("onmouseout","cellMouse(this,'black')");                
+        }
+    }   
+    
+    container.appendChild(output);
+    container.appendChild(table);
+    canvas.appendChild(container);
+    tables.push(opts);
+
+    return table; 
+}
+
+
+
+function cellMouse(obj, color){
+	obj.style.border = '1px solid '+ color; 
+}
+
+function toggleCell(obj, color) { cellMouse(obj, color); }
+
+
+</script>
+
+</body>
+
+
+</html>
