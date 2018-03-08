@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+	canvas { background: #eeeeee; }
+</style>
+	<title>
+		
+	</title>
+</head>
+<body>
+
+<p><canvas id="canvas" width="84" height="48"></p>
+
+
+
+<script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+var positionX = 48; //el centro del canvas
+var positionY = 44;// nivel del suelo
+var velocityX = 1.0;// velocidad de despalazamiento
+var velocityY = 0.0; // velocidad variable , la que toma al saltar 
+var gravity = 1;
+var onGround = false;
+
+window.addEventListener("mousedown", StartJump, false);
+//window.addEventListener("mouseup", EndJump, false);
+
+Loop();
+
+function StartJump()
+{
+    if(onGround)
+    {
+        velocityY = -7.0;//fuerza del salto
+        onGround = false;
+    }
+}
+
+function EndJump()
+{
+    if(velocityY < -6.0){
+        velocityY = -6.0;     
+    }
+}
+
+function Loop()
+{
+    Update();
+    Render();
+    window.setTimeout(Loop, 20);    
+}
+
+function Update()
+{
+    velocityY += gravity;
+    positionY += velocityY;
+    positionX += velocityX;
+    
+    
+    if(positionY > 44)
+    {
+        positionY = 44; // nivel del suelo
+        velocityY = 0.0;// sin salto 
+        onGround = true;// en el suelo
+    }
+
+    
+    
+    if(positionX < 1 || positionX > 84)
+        velocityX *= -1;
+}
+
+function Render()
+{
+    ctx.clearRect(0, 0, 84, 48);
+    
+    ctx.beginPath();
+    ctx.moveTo(0,40);
+    ctx.lineTo(84,40);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(positionX - 5, positionY - 10);
+    ctx.lineTo(positionX + 5, positionY - 10);
+    ctx.lineTo(positionX + 5, positionY);
+    ctx.lineTo(positionX - 5, positionY);
+    ctx.closePath();
+    ctx.stroke(); 
+}
+
+</script>
+
+</body>
+</html>
