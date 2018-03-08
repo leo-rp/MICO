@@ -60,7 +60,8 @@
 		
 	</tr>
 	
-	
+	<textarea id="textbox"></textarea> <button id="create">Donwload file</button> <a download="bitmaps.h" id="downloadlink" style="display: none">Download</a>
+
 
 
 </table>		
@@ -251,6 +252,35 @@ function cellMouse(obj, color){
 }
 
 function toggleCell(obj, color) { cellMouse(obj, color); }
+
+
+
+
+
+
+
+function downloadBitmaps{
+var textFile = null,
+  makeTextFile = function (text) {
+    var data = new Blob([text], {type: 'text/plain'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) {
+      window.URL.revokeObjectURL(textFile);
+    }
+    textFile = window.URL.createObjectURL(data);
+    return textFile;
+  };
+
+ 
+  /*  var link = document.getElementById('downloadlink');
+    link.href = makeTextFile(textbox.value);
+    link.style.display = 'block';
+
+    */
+  
+};
 
 
 </script>
