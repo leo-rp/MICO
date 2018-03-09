@@ -24,7 +24,12 @@
         border: 1px solid red;
       }
       
+      button {
+        vertical-align: top;
+      }
+      
       input {
+        vertical-align: top;
         width: 50px;
       }
       
@@ -47,10 +52,13 @@
             <input id="cols" type="number" value="8" step="8" min="8" />
             <input id="rows" type="number" value="8" step="8" min="8" />
             <button id="drawButton" onmousedown="newTable();">New</button>
+            <textarea id="bitmap-to-import" style="width:340px;height:15px;"></textarea>
+            <button onmousedown="newTableFromJSON();">New From JSON</button>
           </div>
           <div>
-            <button onmousedown="exportBitmaps();">Export</button>
-            <button onmousedown="importBitmaps();">Import</button>
+            <button onmousedown="exportBitmaps();">Export All</button>
+            <textarea id="bitmaps-to-import" style="width:600px;height:15px;"></textarea>
+            <button onmousedown="importBitmaps();">Import Several</button>
             <div id="bitmaps"></div>
           </div>
           <br />
@@ -137,6 +145,10 @@ function createTable2( name, rows, cols ) {
   container += '<div class="json"></div>';
   container += '</div>';
   canvas.innerHTML += container;
+  
+  tbls = document.querySelectorAll( '#canvas .table' );
+  if ( tbls.length > 1 ) { previewAnimation(); }
+  
   return( tableId );
 }
 
@@ -146,15 +158,15 @@ function newTable() {
   const cols = document.getElementById( 'cols' ).value;
   //createTable( rows, cols, name );
   createTable2( name, rows, cols );
-  // Powered by Glendel
-  tbls = document.querySelectorAll( '#canvas .table' );
-  if ( tbls.length > 1 ) { previewAnimation(); }
+}
+
+function newTableFromJSON() {
+  const json = document.getElementById( 'bitmap-to-import' ).value;
+  createTable2( JSON.parse( json ) );
 }
 
 function cloneTable( tableId ) {
   createTable2( bitmaps[ tableId ] );
-  tbls = document.querySelectorAll( '#canvas .table' );
-  if ( tbls.length > 1 ) { previewAnimation(); }
 }
 
 function printBitmap( tableId ) {
@@ -172,11 +184,23 @@ function printJSON( tableId ) {
 }
 
 function deleteTable( tableId ) {
-  alert( 'Falta el Código para borrar la Tabla : ' + tableId );
+  document.getElementById( 'table'+tableId ).remove();
+  bitmaps[ tableId ] = undefined;
+  tbls = document.querySelectorAll( '#canvas .table' );
+  clearInterval( theAnimation );
+  if ( tbls.length > 1 ) { previewAnimation(); }
 }
 
 function exportBitmaps() {
   document.getElementById( 'bitmaps' ).innerHTML = JSON.stringify( bitmaps );
+}
+
+function importBitmaps() {
+  const json = document.getElementById( 'bitmaps-to-import' ).value;
+  const bitmapsToImport = JSON.parse( json );
+  bitmapsToImport.forEach( function( element ) {
+    if ( Array.isArray( element ) ) { createTable2( element ); }
+  } );
 }
 
 // Codigo Viejo
