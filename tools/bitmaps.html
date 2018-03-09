@@ -64,15 +64,16 @@
     </table>
 
 <script type="text/javascript">
-  const canvas = document.getElementById( 'canvas' );
-  const animaBody = document.getElementById( 'preview' );
+  const canvas = document.getElementById( 'canvas' ); // Contenedor de las Tablas
+  const animaBody = document.getElementById( 'preview' ); // Contenedor de la Animación
   let theAnimation,
       tbls,
-      currentTable = 0, // Powered by Glendel
+      currentTable = 0,
       tables = [],
-      bitmaps = [];
+      bitmaps = [],
+      autoToggleColor = false;
   
-// Powered by Glendel
+// Función para la Animación
 function previewAnimation() {
   clearInterval( theAnimation );
   const speed = document.getElementById( 'speed' ).value;
@@ -83,6 +84,7 @@ function previewAnimation() {
   }, speed );
 }
 
+// Función Llamada cuando se da Click en una Celda
 function toggleColor( obj, tableId, currentPosX, currentPosY ) {
   if ( obj.style.background == 'black' ) {
     obj.style.background = 'white';
@@ -93,6 +95,7 @@ function toggleColor( obj, tableId, currentPosX, currentPosY ) {
   }
 }
 
+// Función para crear y agregar una Tabla y su Bitmap
 function createTable2( name, rows, cols ) {
   let tableId = ( ( tbls === undefined ) ? 0 : tbls.length );
   let container = '<div id="table'+tableId+'">';
@@ -109,14 +112,14 @@ function createTable2( name, rows, cols ) {
     bitmaps[ tableId ] = [ name, rows, cols, [] ];
   }
   
-  container += '<div class="table">';
+  container += '<div class="table" onmousedown="autoToggleColor=true;" onmouseup="autoToggleColor=false;">';
   
   for( let i = 0; i < rows; i++ ) {
     container += '<div class="tr">';
     for( let j = 0; j < cols; j++ ) {
       if ( !isClonning ) { bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 0; }
       let style = ( ( bitmaps[ tableId ][ currentPosX ][ currentPosY ] == 1 ) ? ' style="background:black;"' : '' );
-      container += '<div class="td" onmousedown="toggleColor(this,'+tableId+','+currentPosX+','+currentPosY+');"'+style+'></div>';
+      container += '<div class="td"'+style+' onmousedown="toggleColor(this,'+tableId+','+currentPosX+','+currentPosY+');" onmouseover="if(autoToggleColor){toggleColor(this,'+tableId+','+currentPosX+','+currentPosY+');}"></div>';
       currentPosY += 1;
       if ( currentPosY >= 8 ) {
         currentPosX += 1;
