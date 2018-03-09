@@ -24,11 +24,19 @@
         border: 1px solid red;
       }
       
+      .advanced {
+        display: none;
+      }
+      
+      .animation-controls {
+        display: none;
+      }
+      
       button {
         vertical-align: top;
       }
       
-      input {
+      input[type=text], input[type=number] {
         vertical-align: top;
         width: 50px;
       }
@@ -52,10 +60,10 @@
             <input id="cols" type="number" value="8" step="8" min="8" />
             <input id="rows" type="number" value="8" step="8" min="8" />
             <button id="drawButton" onmousedown="newTable();">New</button>
-            <textarea id="bitmap-to-import" style="width:340px;height:15px;"></textarea>
-            <button onmousedown="newTableFromJSON();">New From JSON</button>
+            <textarea id="bitmap-to-import" class="advanced" style="width:340px;height:15px;"></textarea>
+            <button class="advanced" onmousedown="newTableFromJSON();">New From JSON</button>
           </div>
-          <div>
+          <div class="advanced">
             <button onmousedown="exportBitmaps();">Export All</button>
             <textarea id="bitmaps-to-import" style="width:600px;height:15px;"></textarea>
             <button onmousedown="importBitmaps();">Import Several</button>
@@ -64,18 +72,25 @@
           <br />
           <div id="canvas" style="max-height: 800px; min-width: 800px; overflow: auto;"></div>
         </td>
-        <td>
-          <label>Velocidad de la Animación:</label> <input id="speed" type="number" value="1000" step="100" min="10" onchange="previewAnimation();" />
-          <div id="preview"></div>
+        <td style="vertical-align:top;">
+          <input id="toggle-advanced-options" type="checkbox" onclick="toggleAdvancedOptions();" /><label>Show Advanced Options</label>
+          <div class="animation-controls advanced">
+            <label>Velocidad de la Animación:</label> <input id="speed" type="number" value="1000" step="100" min="10" onchange="previewAnimation();" />
+            <div class="displayer"></div>
+          </div>
         </td>
       </tr>
     </table>
 
 <script type="text/javascript">
   const canvas = document.getElementById( 'canvas' ); // Contenedor de las Tablas
-  const animaBody = document.getElementById( 'preview' ); // Contenedor de la Animación
+  const animationControls = document.querySelector( '.animation-controls' );
+  const animationDisplayer = animationControls.querySelector( '.displayer' ); // Contenedor de la Animación
+  const toggleAdvancedOptionsChk = document.getElementById( 'toggle-advanced-options' );
+  let advancedObjs = document.querySelectorAll( '.advanced' ); // Funcionalidades Avanzadas
   let theAnimation,
       tbls,
+      lastTableId = 0,
       currentTable = 0,
       tables = [],
       bitmaps = [],
@@ -83,13 +98,19 @@
   
 // Función para la Animación
 function previewAnimation() {
+  tbls = document.querySelectorAll( '#canvas .table' );
   clearInterval( theAnimation );
-  const speed = document.getElementById( 'speed' ).value;
-  theAnimation = setInterval( function() {
-    currentTable = ( currentTable >= ( tbls.length - 1 ) ) ? 0 : ( currentTable + 1 );
-    //console.log( 'Hola ' + currentTable );
-    animaBody.innerHTML = tbls[ currentTable ].outerHTML;
-  }, speed );
+  if ( ( tbls.length > 1 ) && toggleAdvancedOptionsChk.checked ) {
+    const speed = document.getElementById( 'speed' ).value;
+    animationControls.classList.remove( 'animation-controls' );
+    theAnimation = setInterval( function() {
+      currentTable = ( currentTable >= ( tbls.length - 1 ) ) ? 0 : ( currentTable + 1 );
+      //console.log( 'Hola ' + currentTable );
+      animationDisplayer.innerHTML = tbls[ currentTable ].outerHTML;
+    }, speed );
+  } else {
+    animationControls.classList.add( 'animation-controls' );
+  }
 }
 
 // Función Llamada cuando se da Click en una Celda
@@ -101,11 +122,12 @@ function toggleColor( obj, tableId, currentPosX, currentPosY ) {
     obj.style.background = 'black';
     bitmaps[ tableId ][ currentPosX ][ currentPosY ] = 1;
   }
+	if ( canvas.querySelector( '#table'+tableId+' > .actions > .auto-bitmap' ).checked ) { printBitmap( tableId ); };
 }
 
 // Función para crear y agregar una Tabla y su Bitmap
 function createTable2( name, rows, cols ) {
-  let tableId = ( ( tbls === undefined ) ? 0 : tbls.length );
+  let tableId = lastTableId; //( ( tbls === undefined ) ? 0 : tbls.length );
   let container = '<div id="table'+tableId+'">';
   let currentPosX = 3;
   let currentPosY = 0;
@@ -120,7 +142,7 @@ function createTable2( name, rows, cols ) {
     bitmaps[ tableId ] = [ name, rows, cols, [] ];
   }
   
-  container += '<div class="table" onmousedown="autoToggleColor=true;" onmouseup="autoToggleColor=false;">';
+  container += '<div class="table" onmousedown="autoToggleColor=true;" onmouseup="autoToggleColor=false;" onmouseleave="autoToggleColor=false;">';
   
   for( let i = 0; i < rows; i++ ) {
     container += '<div class="tr">';
@@ -138,16 +160,18 @@ function createTable2( name, rows, cols ) {
     container += '</div>';
   }
 
-  container += '</div>';
-  container += '<div class="actions">';
-  container += '<button onmousedown="printBitmap('+tableId+');">Bitmap</button> <button onmousedown="printJSON('+tableId+');">JSON</button> <button onmousedown="cloneTable('+tableId+')">Clone</button> <button onmousedown="if(confirm(\'Esta seguro ?\')){deleteTable('+tableId+');}">Delete</button>';
+  container += '</div>'; // Fin de la Tabla
+  const advancedClass = ( ( toggleAdvancedOptionsChk.checked ) ? '' : ' advanced' );
+  container += '<div class="actions'+advancedClass+'">';
+  container += '<input type="checkbox" checked="checked" class="auto-bitmap" /><label>Auto</label> <button onmousedown="printBitmap('+tableId+');">Bitmap</button> <button onmousedown="printJSON('+tableId+');">JSON</button> <button onmousedown="cloneTable('+tableId+')">Clone</button> <button onmousedown="invertTable('+tableId+');">Invert</button> <button onmousedown="if(confirm(\'Esta seguro ?\')){deleteTable('+tableId+');}">Delete</button>';
   container += '</div><div class="bitmap"></div>';
-  container += '<div class="json"></div>';
+  container += '<div class="json'+advancedClass+'"></div>';
   container += '</div>';
   canvas.innerHTML += container;
   
-  tbls = document.querySelectorAll( '#canvas .table' );
-  if ( tbls.length > 1 ) { previewAnimation(); }
+  previewAnimation();
+  advancedObjs = document.querySelectorAll( '.advanced' );
+  lastTableId += 1;
   
   return( tableId );
 }
@@ -169,6 +193,10 @@ function cloneTable( tableId ) {
   createTable2( bitmaps[ tableId ] );
 }
 
+function invertTable( tableId ) {
+  alert( 'Invertir los colores de la tabla : ' + tableId );
+}
+
 function printBitmap( tableId ) {
 	let output = 'const uint8_t '+bitmaps[tableId][0]+'[] PROGMEM = { '+bitmaps[tableId][1]+','+bitmaps[tableId][2];
 	let size = ( bitmaps[tableId].length - 2 );
@@ -186,9 +214,7 @@ function printJSON( tableId ) {
 function deleteTable( tableId ) {
   document.getElementById( 'table'+tableId ).remove();
   bitmaps[ tableId ] = undefined;
-  tbls = document.querySelectorAll( '#canvas .table' );
-  clearInterval( theAnimation );
-  if ( tbls.length > 1 ) { previewAnimation(); }
+  previewAnimation();
 }
 
 function exportBitmaps() {
@@ -201,6 +227,26 @@ function importBitmaps() {
   bitmapsToImport.forEach( function( element ) {
     if ( Array.isArray( element ) ) { createTable2( element ); }
   } );
+}
+
+function toggleAdvancedOptions() {
+  if ( toggleAdvancedOptionsChk.checked ) {
+    advancedObjs.forEach( function( element ) {
+      element.classList.remove( 'advanced' );
+      previewAnimation();
+    } );
+  } else {
+    const autoBitmaps = document.querySelectorAll( '.auto-bitmap' );
+    
+    advancedObjs.forEach( function( element ) {
+      element.classList.add( 'advanced' );
+      clearInterval( theAnimation );
+    } );
+    
+    autoBitmaps.forEach( function( element ) {
+      element.checked = true;
+    } );
+  }
 }
 
 // Codigo Viejo
