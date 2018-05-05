@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+	canvas { background: #eeeeee; }
+</style>
+	<title>
+		
+	</title>
+</head>
+<body>
+
+<p><canvas id="canvas" width="300" height="300"></p>
+
+
+
+
+
+
+
+<script type="text/javascript">
+var pause = false;
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var width = 300; 
+var height = 300;
+var suelo = (height-50);
+var positionX = (width/2); //el centro de del canvas
+var positionY = suelo;// a nivel del suelo
+var velocityX = 1.0;// velocidad de despalazamiento
+var velocityY = 0.0; //velocidad variable , la que toma al saltar 
+var gravity = 0.9;
+var onGround = false;
+var second = 1000;
+var fps = second/60;
+
+
+
+function StartJump()
+{
+    if(onGround)
+    {
+        velocityY = -10;//fuerza del salto
+        onGround = false; //falso cuando salta 
+    }	
+	
+	
+	/*if(pause == false){
+		pause = true;
+	}else{
+		pause = false;
+	}*/
+	
+	
+}
+
+
+function Update()
+{
+    velocityY += gravity;/* es un valor negativo al cual se le suma 
+	la gravedad, que es constante en cada iteracion del loop (segundo) */
+    positionY += velocityY;/* la pocision se ve afectada por el nuevo 
+	valor de la velocidad al pasar el tiempo*/
+    	
+	
+    
+    if(positionY > suelo)/* la posicion del objeto no debe sobre 
+	pasar el nivel del suelo, superficie o plataforma fisica*/
+    {
+        positionY = suelo; //a nivel del suelo
+        velocityY = 0.0;// no salto  , aceleracion 0 
+        onGround = true;// esta en el suelo
+    }
+
+    
+	/* movimiento horizontal*/
+    positionX += velocityX;    
+    if(positionX < 1 || positionX > width)
+        {velocityX *= -1;}
+}
+
+
+window.addEventListener("mousedown", StartJump, false);
+
+Loop();
+
+function Loop()
+{	window.setTimeout(Loop, fps);    
+    if (pause == false)
+	{
+		Update();
+	}
+    Render();    
+}
+
+/*  */
+function Render()
+{
+    ctx.clearRect(0, 0, width, height); 
+	ctx.font = "15px Comic Sans MS";
+	ctx.fillStyle = "red";	
+	ctx.fillText("Vel-Y: "+velocityY ,0,height-20);
+	ctx.fillText("Pos-Y: "+positionY ,0,height-5);
+	
+
+    ctx.beginPath();
+    ctx.moveTo(0,(suelo));
+    ctx.lineTo(width,(suelo-4));
+    ctx.stroke();    
+    ctx.beginPath();
+    ctx.moveTo(positionX - 10, positionY - 20);
+    ctx.lineTo(positionX + 10, positionY - 20);
+    ctx.lineTo(positionX + 10, positionY);
+    ctx.lineTo(positionX - 10, positionY);
+    ctx.closePath();
+    ctx.stroke(); 
+}
+
+</script>
+
+</body>
+
+
+
+
+
+
+</html>
